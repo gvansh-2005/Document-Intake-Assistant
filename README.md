@@ -8,6 +8,7 @@ A structured document intake web application that collects personal wishes infor
 
 ## Table of Contents
 
+- [Demo Video](#demo-video)
 - [Quick Start](#quick-start)
 - [Architecture Overview](#architecture-overview)
 - [Project Structure](#project-structure)
@@ -23,6 +24,14 @@ A structured document intake web application that collects personal wishes infor
   - [Conversation History Mechanism](#conversation-history-mechanism)
 - [Known Limitations & Production Improvements](#known-limitations--production-improvements)
 - [License](#license)
+
+---
+
+## Demo Video
+
+A short walkthrough of the application in action — covering the conversational intake flow, live state preview, and live document generation.
+
+📹 **Watch the demo**: https://drive.google.com/file/d/1lvb8BnKinoek8pgINsTRHYOeeNlwoURo/view?usp=sharing
 
 ---
 
@@ -620,7 +629,6 @@ State is always read from `SessionStore.state`, never derived from history.
 | No rate limiting | Not required | FastAPI middleware or API gateway |
 | Single-process | In-memory store | Sticky sessions or shared store |
 | No audit logging | Not required | Structured logging + audit trail |
-| No PDF export | Not required | WeasyPrint or ReportLab |
 | Mock has limitations | Regex-based, not AI | Groq API for production |
 | No i18n | English only | gettext or similar |
 
