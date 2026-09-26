@@ -11,15 +11,18 @@ A structured document intake web application that collects personal wishes infor
 - [Quick Start](#quick-start)
 - [Architecture Overview](#architecture-overview)
 - [Project Structure](#project-structure)
+- [Structured State Schema](#structured-state-schema)
 - [Implementation Details](#implementation-details)
 - [API Contract](#api-contract)
 - [Design Decisions](#design-decisions)
 - [SOLID Principles Applied](#solid-principles-applied)
 - [Requirement Coverage](#requirement-coverage)
 - [Testing](#testing)
-- [API Response Optimisations](#api-response-optimisations)
-- [Conversation History Mechanism](#conversation-history-mechanism)
+- [Performance & Internals](#performance--internals)
+  - [API Response Optimisations](#api-response-optimisations)
+  - [Conversation History Mechanism](#conversation-history-mechanism)
 - [Known Limitations & Production Improvements](#known-limitations--production-improvements)
+- [License](#license)
 
 ---
 
@@ -199,6 +202,33 @@ document-intake-assistant/
 
 ---
 
+## Structured State Schema
+
+```python
+class PersonalWishesState(BaseModel):
+    full_name: Optional[str] = None               # Full legal name
+    home_address: Optional[str] = None             # Residential address
+    covers_worldwide_assets: Optional[bool] = None # True/False/None(unknown)
+    has_children: Optional[bool] = None            # True/False/None(unknown)
+    children_names: Optional[List[str]] = None     # None=not asked, []=confirmed empty
+    executor: Optional[ExecutorInfo] = None         # {name, relationship}
+    specific_gifts: Optional[List[str]] = None     # None=not asked, []=confirmed none
+    additional_wishes: Optional[str] = None        # Free-text wishes
+```
+
+### Value Semantics
+
+| Value | Meaning |
+|-------|---------|
+| `None` | Unknown / not yet collected — assistant should ask |
+| `False` | User explicitly declined (e.g., "I don't have children") |
+| `[]` | User confirmed empty (e.g., "No specific gifts") |
+| `""` | User confirmed none (for string fields) |
+
+This distinction is reflected throughout the codebase: state service, document generator, and follow-up question logic all branch on it.
+
+---
+
 ## Implementation Details
 
 ### 1. Backend-Owned State (Session Management)
@@ -217,23 +247,7 @@ The **backend is the single source of truth** for all session state. The fronten
 
 **Why**: Prevents stale client state from overwriting newer server state. The brief explicitly says "conversation history alone is not sufficient as the application's source of truth."
 
-### 2. Explicit State Semantics (None vs. Empty)
-
-```python
-# models.py
-children_names: Optional[List[str]] = None
-specific_gifts: Optional[List[str]] = None
-```
-
-| Value | Meaning |
-|-------|---------|
-| `None` | Field not yet discussed — assistant should ask |
-| `[]` | User explicitly confirmed no items — don't re-ask |
-| `["John"]` | User provided values |
-
-This distinction is reflected throughout: state service, document generator, and follow-up question logic.
-
-### 3. Contradiction Detection
+### 2. Contradiction Detection
 
 When the LLM extracts a value that differs from an existing non-null value, the state service returns a `PendingConfirmation`:
 
@@ -248,14 +262,14 @@ PendingConfirmation(
 
 The conversation service includes a notification in the assistant reply and sets the response status to `needs_confirmation`.
 
-### 4. Ambiguity Handling
+### 3. Ambiguity Handling
 
 The state service detects partially-filled structures that need follow-up:
 
 - **Executor name without relationship**: `get_missing_fields()` detects `executor_relationship` is missing → triggers: "What is James's relationship to you?"
 - **Has children without names**: `has_children=True` with empty `children_names` → triggers: "Could you share the names of your children?"
 
-### 5. Deterministic Document Generation
+### 4. Deterministic Document Generation
 
 The draft document is generated from **state, not conversation**:
 
@@ -272,7 +286,7 @@ Conversation → LLM → document
 
 This eliminates hallucination risk and ensures the document is always consistent with the validated state.
 
-### 6. LLM Provider Abstraction
+### 5. LLM Provider Abstraction
 
 The LLM interaction is hidden behind an abstract interface (`LLMProvider` ABC):
 
@@ -306,7 +320,7 @@ The mock handles:
 | Follow-up questions | Based on which fields are still missing |
 | Corrections | "Actually my name is Jane Doe" |
 
-### 7. Frontend Security (XSS Prevention)
+### 6. Frontend Security (XSS Prevention)
 
 All user and assistant messages are rendered using safe DOM methods:
 
@@ -318,7 +332,7 @@ div.textContent = message;
 chatBox.innerHTML += `<div>${message}</div>`;
 ```
 
-### 8. Structured LLM Output Enforcement
+### 7. Structured LLM Output Enforcement
 
 When using Groq, the system uses `response_format={"type": "json_object"}` to force JSON output:
 
@@ -333,14 +347,14 @@ response = client.chat.completions.create(
 
 The raw JSON is then validated against the Pydantic schema. If validation fails, the output is rejected and a safe fallback is returned.
 
-### 9. Externalised Prompt
+### 8. Externalised Prompt
 
 The system prompt is stored in `app/prompts/intake_prompt.txt` rather than inline in Python code. This:
 - Separates prompt engineering from application logic
 - Makes prompt iteration easier
 - Allows independent version control and review
 
-### 10. Graceful Error Handling
+### 9. Graceful Error Handling
 
 | Error Type | Handling |
 |-----------|---------|
@@ -412,31 +426,6 @@ The system prompt is stored in `app/prompts/intake_prompt.txt` rather than inlin
 ### `GET /api/health` — Health Check
 
 **Response**: `{ "status": "healthy" }`
-
----
-
-## Structured State Schema
-
-```python
-class PersonalWishesState(BaseModel):
-    full_name: Optional[str] = None               # Full legal name
-    home_address: Optional[str] = None             # Residential address
-    covers_worldwide_assets: Optional[bool] = None # True/False/None(unknown)
-    has_children: Optional[bool] = None            # True/False/None(unknown)
-    children_names: Optional[List[str]] = None     # None=not asked, []=confirmed empty
-    executor: Optional[ExecutorInfo] = None         # {name, relationship}
-    specific_gifts: Optional[List[str]] = None     # None=not asked, []=confirmed none
-    additional_wishes: Optional[str] = None        # Free-text wishes
-```
-
-### Value Semantics
-
-| Value | Meaning |
-|-------|---------|
-| `None` | Unknown / not yet collected — assistant should ask |
-| `False` | User explicitly declined (e.g., "I don't have children") |
-| `[]` | User confirmed empty (e.g., "No specific gifts") |
-| `""` | User confirmed none (for string fields) |
 
 ---
 
@@ -566,38 +555,38 @@ pytest --cov=app --cov-report=term-missing
 
 ---
 
-## API Response Optimisations
+## Performance & Internals
 
-### 1. Minimal Payload — Session-Based Architecture
+### API Response Optimisations
+
+**1. Minimal Payload — Session-Based Architecture**
 The request payload is minimal: `{ session_id, message }`. State is not sent from the client, reducing request size and eliminating redundant data transfer.
 
-### 2. Sliding Window Conversation History
+**2. Sliding Window Conversation History**
 Only the last 10 messages are sent to the LLM (`get_recent_history(limit=10)`). This bounds:
 - **Token cost**: Prevents unbounded growth of prompt tokens
 - **Latency**: Shorter prompts = faster LLM response
 - **State safety**: Older messages are not needed because extracted state is already persisted
 
-### 3. Lazy Document Generation
+**3. Lazy Document Generation**
 The draft document is generated only once per request, after state merge. It is not regenerated on read — only on write (state change).
 
-### 4. Response Compression via Status Enum
+**4. Response Compression via Status Enum**
 The `status` field (`collecting`, `needs_confirmation`, `complete`, etc.) allows the frontend to make UI decisions without parsing the full state object.
 
-### 5. Structured Output — Zero Post-Processing
+**5. Structured Output — Zero Post-Processing**
 Using Groq's JSON mode with `response_format={"type": "json_object"}` means the LLM response is already JSON. Pydantic then validates and parses it. No regex parsing, no JSON extraction from text, no retry loops.
 
----
+### Conversation History Mechanism
 
-## Conversation History Mechanism
-
-### How It Works
+**How it works**:
 
 1. **Storage**: Each session maintains a `conversation_history: List[dict]` in the backend session store
 2. **Append**: After each turn, both the user message and assistant reply are appended
 3. **Retrieval**: `get_recent_history(session_id, limit=10)` returns a sliding window
 4. **LLM Context**: The sliding window is injected into the LLM prompt as prior messages
 
-### Why a Sliding Window?
+**Why a sliding window?**
 
 | Approach | Token Cost | Latency | State Safety |
 |----------|-----------|---------|-------------|
@@ -607,9 +596,7 @@ Using Groq's JSON mode with `response_format={"type": "json_object"}` means the 
 
 The sliding window is the best trade-off: it maintains enough context for coherent conversation while keeping costs bounded. Since all extracted information is persisted in the canonical state, no *data* is lost — only conversational context beyond the window.
 
-### History Never Controls State
-
-The conversation history is used for:
+**History never controls state.** The conversation history is used for:
 - ✅ Providing conversational context to the LLM
 - ✅ Helping the LLM understand follow-up references ("yes", "that's correct")
 
@@ -659,5 +646,3 @@ State is always read from `SessionStore.state`, never derived from history.
 ## License
 
 This is a fictional demonstration project for educational and evaluation purposes only. Not legal advice.
-#   D o c u m e n t - I n t a k e - A s s i s t a n t  
- 
