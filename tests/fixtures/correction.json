@@ -1,0 +1,35 @@
+{
+    "description": "Correction scenario — user changes their name after initial entry",
+    "initial_state": {
+        "full_name": "Jane Smith",
+        "home_address": "42 Elm Street",
+        "covers_worldwide_assets": null,
+        "has_children": null,
+        "children_names": null,
+        "executor": null,
+        "specific_gifts": null,
+        "additional_wishes": null
+    },
+    "user_message": "Actually, my name is Jane Doe.",
+    "llm_response": {
+        "full_name": "Jane Doe",
+        "home_address": null,
+        "covers_worldwide_assets": null,
+        "has_children": null,
+        "children_names": null,
+        "executor_name": null,
+        "executor_relationship": null,
+        "specific_gifts": null,
+        "additional_wishes": null,
+        "assistant_reply": "I've updated your name to Jane Doe."
+    },
+    "expected_state": {
+        "full_name": "Jane Doe",
+        "home_address": "42 Elm Street"
+    },
+    "expected_contradiction": {
+        "field": "full_name",
+        "old_value": "Jane Smith",
+        "new_value": "Jane Doe"
+    }
+}

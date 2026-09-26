@@ -1,0 +1,11 @@
+{
+    "description": "Malformed LLM response — invalid type for has_children (string instead of bool)",
+    "user_message": "I have banana children",
+    "llm_response_raw": {
+        "full_name": null,
+        "has_children": "banana",
+        "assistant_reply": "Could you clarify?"
+    },
+    "expected_behaviour": "Pydantic validation error — state must remain unchanged",
+    "pydantic_should_reject": true
+}

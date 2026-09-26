@@ -1,0 +1,21 @@
+{
+    "description": "Ambiguous LLM response — executor name provided without relationship",
+    "user_message": "My executor is James.",
+    "llm_response": {
+        "full_name": null,
+        "home_address": null,
+        "covers_worldwide_assets": null,
+        "has_children": null,
+        "children_names": null,
+        "executor_name": "James",
+        "executor_relationship": null,
+        "specific_gifts": null,
+        "additional_wishes": null,
+        "assistant_reply": "Got it — James will be your executor. What is James's relationship to you?"
+    },
+    "expected_state_executor": {
+        "name": "James",
+        "relationship": null
+    },
+    "expected_missing_fields": ["executor_relationship"]
+}

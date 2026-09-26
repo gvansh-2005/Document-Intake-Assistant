@@ -1,0 +1,26 @@
+{
+    "description": "Valid LLM response — multiple fields extracted correctly from a single message",
+    "user_message": "My name is Jane Smith, I live at 42 Elm Street, London. I don't have children.",
+    "llm_response": {
+        "full_name": "Jane Smith",
+        "home_address": "42 Elm Street, London",
+        "covers_worldwide_assets": null,
+        "has_children": false,
+        "children_names": null,
+        "executor_name": null,
+        "executor_relationship": null,
+        "specific_gifts": null,
+        "additional_wishes": null,
+        "assistant_reply": "Thank you, Jane! Should this document cover your worldwide assets, or only those in a specific jurisdiction?"
+    },
+    "expected_state": {
+        "full_name": "Jane Smith",
+        "home_address": "42 Elm Street, London",
+        "covers_worldwide_assets": null,
+        "has_children": false,
+        "children_names": [],
+        "executor": null,
+        "specific_gifts": null,
+        "additional_wishes": null
+    }
+}

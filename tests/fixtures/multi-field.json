@@ -1,0 +1,26 @@
+{
+    "description": "Multi-field extraction — user provides name, address, children, and executor in one message",
+    "user_message": "I'm Nishant Shukla, I live in Mumbai, I have two children Rahul and Ananya, and I want my brother James to be my executor.",
+    "llm_response": {
+        "full_name": "Nishant Shukla",
+        "home_address": "Mumbai",
+        "covers_worldwide_assets": null,
+        "has_children": true,
+        "children_names": ["Rahul", "Ananya"],
+        "executor_name": "James",
+        "executor_relationship": "brother",
+        "specific_gifts": null,
+        "additional_wishes": null,
+        "assistant_reply": "Thank you, Nishant! I've captured all that information. Should this document cover your assets worldwide, or only those in a specific jurisdiction?"
+    },
+    "expected_state": {
+        "full_name": "Nishant Shukla",
+        "home_address": "Mumbai",
+        "has_children": true,
+        "children_names": ["Rahul", "Ananya"],
+        "executor": {
+            "name": "James",
+            "relationship": "brother"
+        }
+    }
+}

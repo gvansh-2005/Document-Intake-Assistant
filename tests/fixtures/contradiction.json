@@ -1,0 +1,35 @@
+{
+    "description": "Contradiction scenario — user says they have children after previously saying no",
+    "initial_state": {
+        "full_name": "Jane Smith",
+        "home_address": "42 Elm Street",
+        "covers_worldwide_assets": null,
+        "has_children": false,
+        "children_names": [],
+        "executor": null,
+        "specific_gifts": null,
+        "additional_wishes": null
+    },
+    "user_message": "Actually, I do have two children, John and Sarah.",
+    "llm_response": {
+        "full_name": null,
+        "home_address": null,
+        "covers_worldwide_assets": null,
+        "has_children": true,
+        "children_names": ["John", "Sarah"],
+        "executor_name": null,
+        "executor_relationship": null,
+        "specific_gifts": null,
+        "additional_wishes": null,
+        "assistant_reply": "Got it — I've updated your record to include your children John and Sarah."
+    },
+    "expected_state": {
+        "has_children": true,
+        "children_names": ["John", "Sarah"]
+    },
+    "expected_contradiction": {
+        "field": "has_children",
+        "old_value": "No",
+        "new_value": "Yes"
+    }
+}
