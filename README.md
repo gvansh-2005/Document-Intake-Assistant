@@ -135,7 +135,7 @@ pytest -v
                   Live State + Draft
 ```
 
-### Data Flow (Single Chat Turn)
+### Data Flow 
 
 1. **Frontend** sends `{ session_id, message }` via `POST /api/chat`
 2. **FastAPI** routes to `ConversationService.handle_message()`
